@@ -1,33 +1,54 @@
-# CoinKeeper – Backend Template (Lab 1)
+# CoinKeeper – Backend Template (Labs 1–2)
 
 ## Overview
 
-CoinKeeper is a minimal backend service used as a template for the **“Server-Side Software Technologies”** labs.  
-It exposes a simple REST API with a `/healthcheck` endpoint and is containerized with Docker so it can be run locally or deployed to platforms like Render.com.
+CoinKeeper is a small backend service used as a template for the **“Server-Side Software Technologies”** labs.
 
-Although the original methodical guidelines use Python + Flask, this implementation uses **Node.js + Express**, while keeping the same lab goals:
+It is implemented with **Node.js + TypeScript + Express** and exposes a simple REST API for:
 
-- Configure a typical backend environment.
-- Implement a healthcheck endpoint.
-- Prepare the project for deployment.
-- Provide clear instructions for local startup and testing.
+- Lab 1 – basic backend setup with a `/healthcheck` endpoint and deployment.
+- Lab 2 – in‑memory REST API for users, categories and expense records.
+
+The application is containerized with Docker and can be run locally or deployed to platforms such as Render.com.
+
+---
 
 ## Tech Stack
 
+- **Language:** TypeScript
 - **Runtime:** Node.js 18 (LTS)
-- **Framework:** Express 5
+- **Framework:** Express
+- **Build:** TypeScript compiler (`tsc`)
 - **Containerization:** Docker, Docker Compose
+
+---
 
 ## Project Structure
 
 ```text
 .
-├── index.js             # Application entry point (Express server)
-├── package.json         # NPM metadata and dependencies
-├── package-lock.json    # Exact dependency tree
-├── Dockerfile           # Image definition for the service
-└── docker-compose.yml   # Local Docker Compose configuration
+├── src
+│   ├── app.ts              # Express app, route registration
+│   ├── server.ts           # Entry point – starts HTTP server
+│   ├── models
+│   │   ├── user.ts         # User interface
+│   │   ├── category.ts     # Category interface
+│   │   └── record.ts       # Record interface
+│   ├── storage
+│   │   └── db.ts           # In‑memory data storage and ID generators
+│   └── routes
+│       ├── healthcheck.ts  # /healthcheck endpoint (Lab 1)
+│       ├── users.ts        # /users, /user/:id
+│       ├── categories.ts   # /category, /category/:id
+│       └── records.ts      # /record, /record/:id
+├── dist/                   # Compiled JavaScript (generated)
+├── package.json
+├── tsconfig.json
+├── Dockerfile
+└── docker-compose.yml
 ```
+
+---
 
 ## Getting Started
 
@@ -36,62 +57,61 @@ Although the original methodical guidelines use Python + Flask, this implementat
 To run the project locally you will need:
 
 - **Node.js** v18.x (or compatible)
-- **npm** (comes with Node)
-- Optionally **Docker** and **Docker Compose** for containerized runs
-- Any HTTP client for testing (e.g. **Insomnia**, Postman, curl)
+- **npm**
+- Optionally **Docker** and **Docker Compose**
+- Any HTTP client for testing (Insomnia, Postman, curl, etc.)
 
-### Local Run (without Docker)
+### Installation
 
-1. **Install dependencies**
+```bash
+npm install
+```
 
-   ```bash
-   npm install
-   ```
+### Development run (TypeScript directly)
 
-2. **Start the server**
+```bash
+npm run dev
+```
 
-   ```bash
-   node index.js
-   ```
+This command starts the server using `ts-node-dev` and automatically reloads on file changes.
 
-3. **Check that the service is running**
+### Production build and run
 
-   By default the application listens on:
+```bash
+npm run build   # compile TypeScript to dist/
+npm start       # run compiled JavaScript from dist/server.js
+```
 
-   - `PORT` environment variable if it is set
-   - otherwise on port `3000`
+By default the application listens on:
 
-   So you can open in browser or via Insomnia:
+- `PORT` environment variable if it is set;
+- otherwise port `3000`.
 
-   - `http://localhost:3000/` – welcome page
-   - `http://localhost:3000/healthcheck` – healthcheck endpoint
+So locally the base URL is usually:
 
-### Running with Docker
+- `http://localhost:3000`
 
-You can also run the service in a container.
+---
 
-#### Using Docker directly
+## Running with Docker
 
-1. **Build the image**
+You can run the service inside a Docker container.
 
-   ```bash
-   docker build -t coinkeeper .
-   ```
+### Build and run with Docker directly
 
-2. **Run the container**
+```bash
+docker build -t coinkeeper .
+docker run -p 8080:3000 -e PORT=3000 coinkeeper
+```
 
-   ```bash
-   docker run -p 8080:3000 -e PORT=3000 coinkeeper
-   ```
+The service will be available at:
 
-   The service will be available at:
+- `http://localhost:8080/`
+- `http://localhost:8080/healthcheck`
 
-   - `http://localhost:8080/`  
-   - `http://localhost:8080/healthcheck`
+### Run with Docker Compose
 
-#### Using Docker Compose
-
-The repository already contains a `docker-compose.yml`. To run via Docker Compose:
+The repository contains a `docker-compose.yml` file.
 
 ```bash
 docker-compose up --build
@@ -102,16 +122,31 @@ After the containers start, the backend will be available at:
 - `http://localhost:8080/`
 - `http://localhost:8080/healthcheck`
 
-## API
+---
 
-### `GET /healthcheck`
+## API Reference
+
+All endpoints are prefixed only by their path (no versioning). Examples below assume `http://localhost:3000` as base URL.
+
+### Common
+
+#### `GET /`
+
+Simple welcome endpoint to verify that the service is reachable.
+
+- **Status:** `200 OK`
+- **Response body (text):**
+
+  ```text
+  Welcome to CoinKeeper!
+  ```
+
+#### `GET /healthcheck`
 
 Healthcheck endpoint used for Render and local monitoring.
 
-- **Method:** `GET`
-- **Path:** `/healthcheck`
-- **Response status:** `200 OK`
-- **Response body (JSON):**
+- **Status:** `200 OK`
+- **Response (JSON):**
 
   ```json
   {
@@ -123,33 +158,205 @@ Healthcheck endpoint used for Render and local monitoring.
 
 The `date` field is generated on each request with the current server time in ISO 8601 format.
 
-### `GET /`
+---
 
-Simple welcome endpoint to verify that the service is reachable.
+### Data Model (Lab 2)
 
-- **Method:** `GET`
-- **Path:** `/`
-- **Response status:** `200 OK`
-- **Response body (text):**
+All data in Lab 2 is stored **in memory only** – there is no database yet.
 
-  ```text
-  Welcome to CoinKeeper!
+- **User**
+  - `id` – number
+  - `name` – string
+
+- **Category**
+  - `id` – number
+  - `name` – string
+
+- **Record**
+  - `id` – number
+  - `userId` – number (existing user)
+  - `categoryId` – number (existing category)
+  - `createdAt` – ISO datetime string (generated by the server)
+  - `amount` – number
+
+IDs are generated by simple in‑memory counters.
+
+---
+
+### Users
+
+#### `GET /users`
+
+Returns all users.
+
+- **Status:** `200 OK`
+- **Response:** array of `User`
+
+#### `GET /user/:userId`
+
+Returns a single user by id.
+
+- **Status 200:** user found, JSON body with `User`
+- **Status 404:** `{ "error": "User not found" }`
+
+#### `POST /user`
+
+Creates a new user.
+
+- **Body (JSON):**
+
+  ```json
+  {
+    "name": "Andrii"
+  }
   ```
 
-## Deployment to Render.com
+- **Status 201:** created user with generated `id`
+- **Status 400:** if `name` is missing
 
-   - `https://coinkeeper-m784.onrender.com/healthcheck`  
+#### `DELETE /user/:userId`
+
+Deletes a user and all of their records.
+
+- **Status 204:** user was deleted
+- **Status 404:** if user does not exist
+
+---
+
+### Categories
+
+#### `GET /category`
+
+Returns all categories.
+
+- **Status:** `200 OK`
+- **Response:** array of `Category`
+
+#### `POST /category`
+
+Creates a new category.
+
+- **Body (JSON):**
+
+  ```json
+  {
+    "name": "Food"
+  }
+  ```
+
+- **Status 201:** created category
+- **Status 400:** if `name` is missing
+
+#### `DELETE /category/:categoryId`
+
+Deletes a category and all records that reference it.
+
+- **Status 204:** category deleted
+- **Status 404:** if category does not exist
+
+---
+
+### Records
+
+#### `GET /record/:recordId`
+
+Returns one expense record by id.
+
+- **Status 200:** record found
+- **Status 404:** `{ "error": "Record not found" }`
+
+#### `POST /record`
+
+Creates a new expense record.
+
+- **Body (JSON):**
+
+  ```json
+  {
+    "userId": 1,
+    "categoryId": 2,
+    "amount": 123.45
+  }
+  ```
+
+- Server automatically sets:
+  - `id` – generated number
+  - `createdAt` – current time in ISO 8601 format
+
+- **Status 201:** created record
+- **Status 400:** if fields are missing, not numbers, or if the referenced user/category does not exist
+
+#### `GET /record`
+
+Returns records filtered by query parameters.
+
+- **Query parameters:**
+  - `user_id` – optional user id
+  - `category_id` – optional category id
+
+Rules:
+
+- If **neither** `user_id` nor `category_id` is provided →  
+  **Status 400** with error message:
+  - `"At least one of 'user_id' or 'category_id' must be provided"`
+- If only `user_id` is provided → return all records of this user.
+- If only `category_id` is provided → return all records in this category.
+- If both are provided → return records that match **both** filters.
+
+#### `DELETE /record/:recordId`
+
+Deletes a record.
+
+- **Status 204:** record deleted
+- **Status 404:** if record does not exist
+
+---
+
+## Deployment to Render.com (example)
+
+This project is prepared to be deployed as a **Docker web service** on Render.
+
+Typical steps:
+
+1. Push the project to a Git repository (e.g. GitHub).
+2. In Render, create **New → Web Service**.
+3. Choose:
+   - **Environment / Language:** `Docker`
+   - **Branch:** `main`
+4. Leave the root directory empty (or set it to the folder name if the project is inside a subdirectory).
+5. Keep default Docker build settings – Render will build the image using the `Dockerfile` in the repository.
+6. After deployment, Render will expose a public URL such as:
+
    - `https://coinkeeper-m784.onrender.com`
 
-## Lab 1 Checklist
+7. Verify the service:
 
-How this project satisfies the Lab 1 requirements:
+   - `https://coinkeeper-m784.onrender.com/healthcheck`
+   - `https://coinkeeper-m784.onrender.com/users` (after you create some users)
+   - `https://coinkeeper-m784.onrender.com/record` (with query parameters)
 
-- ✅ **Backend environment configured** – Node.js + Express project with dependencies in `package.json`.
-- ✅ **Healthcheck endpoint implemented** – `GET /healthcheck` returns JSON with status and timestamp.
-- ✅ **Project under version control** – Git repository with separate commits for initial setup and Docker support.
-- ✅ **Local startup instructions** – This `README.md` contains all steps to run the project locally (with and without Docker).
-- ✅ **Ready for deployment** – The app reads `PORT` from environment and can be deployed to Render.com using the provided commands.
-- ✅ **Manual API testing possible** – Endpoints can be tested with Insomnia/Postman/curl as required by the lab.
+---
 
-This repository can be used as the starting point for the next labs (REST API for expenses, validation, database, authentication, etc.).
+## Labs Mapping
+
+### Lab 1 – Backend preparation
+
+This project satisfies the Lab 1 requirements:
+
+- ✅ Backend environment configured (Node.js + TypeScript + Express).
+- ✅ Healthcheck endpoint implemented (`GET /healthcheck`).
+- ✅ Service can be run locally and in Docker.
+- ✅ Project prepared for deployment on Render.com (uses `PORT` env variable).
+- ✅ README with clear instructions for setup and manual testing.
+
+### Lab 2 – In‑memory REST API
+
+This project also covers Lab 2:
+
+- ✅ In‑memory data model for **users**, **categories** and **records**.
+- ✅ Full CRUD endpoints for all entities (except updates, which are not required).
+- ✅ Special behaviour for `GET /record`:
+  - returns **400 Bad Request** when called without `user_id` or `category_id`.
+- ✅ All endpoints can be tested via Postman / Insomnia and used in Postman Collections & Flows required by the lab.
+
+The same codebase can be extended in later labs with validation, database support and authentication without changing the public API.
