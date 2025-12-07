@@ -337,6 +337,12 @@ Typical steps:
 
 ---
 
+## Postman Flow
+
+The following flow was created in Postman to demonstrate how the API can be used end-to-end:
+
+![CoinKeeper Postman Flow](lab2-flow.jpg)
+
 ## Labs Mapping
 
 ### Lab 1 – Backend preparation
