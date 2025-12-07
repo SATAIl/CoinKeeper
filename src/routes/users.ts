@@ -1,52 +1,84 @@
 import { Router } from "express";
-import { db, nextUserId } from "../storage/db";
-import { User } from "../models/user";
+import { prisma } from "../db/prisma";
+import { validateBody } from "../middleware/validate";
+import { createUserSchema } from "../schemas/user";
 
 const router = Router();
 
-router.get("/users", (_req, res) => {
-  res.json(db.users);
+// GET /users
+router.get("/users", async (_req, res, next) => {
+  try {
+    const users = await prisma.user.findMany();
+    res.json(users);
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get("/user/:userId", (req, res) => {
-  const id = Number(req.params.userId);
-  const user = db.users.find((u) => u.id === id);
+// GET /user/:userId
+router.get("/user/:userId", async (req, res, next) => {
+  try {
+    const id = Number(req.params.userId);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
 
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
+    const user = await prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    next(err);
   }
-
-  res.json(user);
 });
 
-router.post("/user", (req, res) => {
-  const { name } = req.body as { name?: string };
-
-  if (!name) {
-    return res.status(400).json({ error: "Field 'name' is required" });
+// POST /user
+router.post(
+  "/user",
+  validateBody(createUserSchema),
+  async (req, res, next) => {
+    try {
+      const { name } = req.body;
+      const user = await prisma.user.create({
+        data: { name },
+      });
+      res.status(201).json(user);
+    } catch (err) {
+      next(err);
+    }
   }
+);
 
-  const newUser: User = {
-    id: nextUserId(),
-    name
-  };
+// DELETE /user/:userId
+router.delete("/user/:userId", async (req, res, next) => {
+  try {
+    const id = Number(req.params.userId);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
 
-  db.users.push(newUser);
-  res.status(201).json(newUser);
-});
+    await prisma.record.deleteMany({
+      where: { userId: id },
+    });
 
-router.delete("/user/:userId", (req, res) => {
-  const id = Number(req.params.userId);
-  const index = db.users.findIndex((u) => u.id === id);
+    const deleted = await prisma.user.delete({
+      where: { id },
+    });
 
-  if (index === -1) {
-    return res.status(404).json({ error: "User not found" });
+    if (!deleted) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(204).send();
+  } catch (err: any) {
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "User not found" });
+    }
+    next(err);
   }
-
-  db.users.splice(index, 1);
-  db.records = db.records.filter((r) => r.userId !== id);
-
-  res.status(204).send();
 });
 
 export default router;
