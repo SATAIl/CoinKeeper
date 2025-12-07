@@ -1,11 +1,30 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: coinkeeper-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: coinkeeper
+      POSTGRES_USER: coinkeeper
+      POSTGRES_PASSWORD: coinkeeper
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
   coinkeeper:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: coinkeeper
     restart: always
+    depends_on:
+      - db
     ports:
       - "3000:3000"
     environment:
       PORT: "3000"
+      DATABASE_URL: "postgres://coinkeeper:coinkeeper@db:5432/coinkeeper"
+
+volumes:
+  db-data:
