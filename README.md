@@ -1,4 +1,4 @@
-# CoinKeeper – Backend Template (Labs 1–2)
+# CoinKeeper – Backend Template (Labs 1–3)
 
 ## Overview
 
@@ -8,6 +8,7 @@ It is implemented with **Node.js + TypeScript + Express** and exposes a simple R
 
 - Lab 1 – basic backend setup with a `/healthcheck` endpoint and deployment.
 - Lab 2 – in‑memory REST API for users, categories and expense records.
+- Lab 3 – request validation, centralized error handling and PostgreSQL database integration via Prisma ORM.
 
 The application is containerized with Docker and can be run locally or deployed to platforms such as Render.com.
 
@@ -366,3 +367,114 @@ This project also covers Lab 2:
 - ✅ All endpoints can be tested via Postman / Insomnia and used in Postman Collections & Flows required by the lab.
 
 The same codebase can be extended in later labs with validation, database support and authentication without changing the public API.
+
+
+## Lab 3 – Validation, error handling and ORM (status)
+
+This project also covers the requirements of **Lab 3 “Валідація, обробка помилок, ORM”**:
+
+- ✅ Валідація вхідних даних для основних ендпоінтів (користувачі, категорії, транзакції) за допомогою схем у директорії `src/schemas` та проміжного шару `src/middleware`.
+- ✅ Централізована обробка помилок на рівні Express‑middleware: коректні HTTP‑коди, структурована JSON‑відповідь з повідомленням про помилку.
+- ✅ Використання ORM (**Prisma**) для роботи з PostgreSQL – описані моделі (наприклад, `User`, `Category`, `Record`), міграції зберігаються в директорії `prisma/migrations`.
+- ✅ Підключення справжньої бази даних PostgreSQL як локально (через Docker Compose), так і у продакшені (managed PostgreSQL на Render).
+- ✅ Оновлена Postman‑колекція для тестування ендпоінтів з урахуванням роботи з базою даних.
+
+> **Варіант лабораторної 3.** Згідно з методичними вказівками, варіант визначається як остача від ділення номера групи на 3 (1 – валюти, 2 – користувацькі категорії витрат, 0 – облік доходів). Тут у README потрібно явно вказати ваш номер групи, остачу та обраний варіант (функціонал валюти / кастомних категорій / рахунків і доходів) – цю одну фразу можна легко підправити вручну під конкретну групу.
+
+
+## Deployment and Usage
+
+### Local development
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Set up a local PostgreSQL database and specify the connection string in the `DATABASE_URL` environment variable, for example:
+
+```bash
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/coinkeeper?schema=public"
+```
+
+You can keep this value in a `.env` file in the project root:
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/coinkeeper?schema=public
+PORT=10000
+```
+
+3. Run database migrations with Prisma:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+4. Start the application in development mode:
+
+```bash
+npm run dev
+```
+
+The API will be available on `http://localhost:10000` (or on the port specified in `PORT`).
+
+### Running with Docker
+
+The project contains a `Dockerfile` and a `docker-compose.yml` for running the service together with PostgreSQL.
+
+1. Build and start the containers:
+
+```bash
+docker compose up --build
+```
+
+2. After the containers start, apply the migrations inside the application container (once per database):
+
+```bash
+docker compose exec coinkeeper npx prisma migrate deploy
+```
+
+After that, the service will be ready to accept requests.
+
+### Deploying to Render
+
+For deployment to Render as a web service:
+
+1. Push the project to a Git repository (GitHub, GitLab, etc.).
+2. In the Render dashboard create:
+   - a **PostgreSQL** managed database,
+   - a **Web Service** from the repository with the backend.
+
+3. In the Web Service settings configure environment variables:
+
+- `DATABASE_URL` – connection string to the Render PostgreSQL database (can be copied from the database settings);
+- `PORT` – application port (for example, `10000`).
+
+4. Set the build and start commands, for example:
+
+- **Build command:**
+
+```bash
+npm install
+npm run build
+npx prisma migrate deploy
+```
+
+- **Start command:**
+
+```bash
+npm run start
+```
+
+Render will build the image, apply migrations to the managed PostgreSQL database and start the service.
+
+### API and Postman collection
+
+The CoinKeeper API provides endpoints for working with:
+
+- users,
+- categories,
+- records (transactions).
+
+For convenient testing there is a Postman collection and environment; they describe requests for creating users, categories, records and for retrieving data with filters. These files can be imported into Postman to quickly check the work of the API both locally and on the deployed Render instance.
