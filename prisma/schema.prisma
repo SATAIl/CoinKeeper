@@ -8,19 +8,22 @@ generator client {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  name       String
-  categories Category[]
-  records    Record[]
+  id           Int        @id @default(autoincrement())
+  name         String
+  username     String     @unique
+  passwordHash String
+
+  categories   Category[]
+  records      Record[]
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
-  name      String
-  isGlobal  Boolean  @default(false)
-  userId    Int?
-  user      User?    @relation(fields: [userId], references: [id])
-  records   Record[]
+  id       Int      @id @default(autoincrement())
+  name     String
+  isGlobal Boolean  @default(true)
+  userId   Int?
+  user     User?    @relation(fields: [userId], references: [id])
+  records  Record[]
 }
 
 model Record {
