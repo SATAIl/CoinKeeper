@@ -28,6 +28,13 @@ export const authenticate = (
 
   const token = authHeader.slice("Bearer ".length).trim();
 
+  if (!token) {
+    return res.status(401).json({
+      message: "Request does not contain an access token.",
+      error: "authorization_required",
+    });
+  }
+
   try {
     const payload = jwt.verify(token, JWT_SECRET) as {
       userId: number;
@@ -51,3 +58,4 @@ export const authenticate = (
     });
   }
 };
+

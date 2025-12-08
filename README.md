@@ -378,23 +378,23 @@ The following flow was created in Postman to demonstrate how the API can be used
 
 ### Lab 3 – Validation, error handling and ORM
 
-This project also covers the requirements of **Lab 3 “Валідація, обробка помилок, ORM”**:
+This project also satisfies the requirements of **Lab 3 “Validation, error handling, ORM”**:
 
-- ✅ Валідація вхідних даних для основних ендпоінтів (користувачі, категорії, транзакції) за допомогою схем у директорії `src/schemas` та проміжного прошарку `src/middleware`.
-- ✅ Централізована обробка помилок на рівні Express‑middleware: коректні HTTP‑коди та структурована JSON‑відповідь із повідомленням про помилку.
-- ✅ Використання ORM (**Prisma**) для роботи з PostgreSQL – моделі `User`, `Category`, `Record`, міграції з директорії `prisma/migrations`.
-- ✅ Можливість запуску з локальною базою даних (через Docker Compose) та з керованою PostgreSQL‑базою на Render.com.
-- ✅ Оновлена Postman‑колекція для перевірки роботи API з реальною базою даних.
+- ✅ Validation of input data for the main endpoints (users, categories, transactions) using schemas in `src/schemas` and a dedicated middleware layer in `src/middleware`.
+- ✅ Centralized error handling at the Express middleware level: correct HTTP status codes and structured JSON error responses.
+- ✅ Use of an ORM (**Prisma**) to work with PostgreSQL – models `User`, `Category`, `Record`, and migrations stored in `prisma/migrations`.
+- ✅ Ability to run with a local database (via Docker Compose) as well as with a managed PostgreSQL instance on Render.com.
+- ✅ Updated Postman collection to verify the API behaviour with a real database.
 
 ### Lab 4 – Authentication with JWT
 
-For **Lab 4 “Аутентифікація та авторизація”** the following functionality is implemented:
+For **Lab 4 “Authentication and authorization”** the following functionality is implemented:
 
-- ✅ Ендпоінт реєстрації користувача `POST /user` з валідацією `name`, `username`, `password` і збереженням **хешу пароля** (bcrypt).
-- ✅ Ендпоінт логіну `POST /login`, який перевіряє логін/пароль і повертає **JWT access token** з обмеженим часом дії.
-- ✅ JWT‑middleware (`authenticate`) захищає основні ресурси: `GET /users`, `DELETE /user/:id`, `GET/POST/DELETE /category`, `GET/POST/DELETE /record`, `GET /records`.
-- ✅ Обробка типових JWT‑помилок: відсутній токен, прострочений токен, невалідний підпис.
-- ✅ Окрема Postman‑колекція та Flow, які демонструють повний сценарій: реєстрація → логін → робота з категоріями та транзакціями під авторизованим користувачем.
+- ✅ User registration endpoint `POST /user` with validation of `name`, `username`, `password` and storing the **password hash** (bcrypt).
+- ✅ Login endpoint `POST /login` that verifies the username/password and returns a **JWT access token** with limited lifetime.
+- ✅ JWT middleware (`authenticate`) protects the main resources: `GET /users`, `DELETE /user/:id`, `GET/POST/DELETE /category`, `GET/POST/DELETE /record`, `GET /records`.
+- ✅ Handling of common JWT-related errors: missing token, expired token, invalid signature.
+- ✅ A dedicated Postman collection and Flow demonstrating the full scenario: registration → login → working with categories and transactions as an authenticated user.
 
 ---
 
