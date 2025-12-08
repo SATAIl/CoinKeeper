@@ -1,8 +1,10 @@
 import express, { Request, Response, NextFunction } from "express";
 import healthcheckRouter from "./routes/healthcheck";
+import authRouter from "./routes/auth";
 import usersRouter from "./routes/users";
 import categoriesRouter from "./routes/categories";
 import recordsRouter from "./routes/records";
+import { authenticate } from "./middleware/auth";
 
 const app = express();
 
@@ -13,6 +15,10 @@ app.get("/", (_req, res) => {
 });
 
 app.use(healthcheckRouter);
+app.use(authRouter);
+
+app.use(authenticate);
+
 app.use(usersRouter);
 app.use(categoriesRouter);
 app.use(recordsRouter);
